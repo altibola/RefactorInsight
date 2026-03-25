@@ -84,8 +84,8 @@ public class PRFileEditor extends FileEditorBase {
             public void run(@NotNull ProgressIndicator progressIndicator) {
                 loadingPanel.startLoading();
                 VcsLogData vcsLogData = VcsProjectLog.getInstance(project).getLogManager().getDataManager();
-                VirtualFile root = vcsLogData.getRoots().iterator().next();
-                VcsLogProvider vcsLogProvider = VcsProjectLog.getInstance(project).getDataManager().getLogProvider(root);
+                VirtualFile root = vcsLogData.getLogProviders().keySet().iterator().next();
+                VcsLogProvider vcsLogProvider = vcsLogData.getLogProviders().get(root);
                 try {
                     details = VcsLogUtil.getDetails(vcsLogProvider, root, file.getCommitsIds());
                 } catch (VcsException e) {

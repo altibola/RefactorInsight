@@ -1,23 +1,27 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij'
     id 'org.jetbrains.kotlin.jvm'
-}
-
-repositories {
-    mavenCentral()
 }
 
 group = rootProject.group
 version = rootProject.version
 
+def refactoringMinerVersion = project.findProperty('refactoringMinerVersion') ?: '3.1.2'
+
 dependencies {
-    implementation(group: 'com.github.tsantalis', name: 'refactoring-miner', version: '2.4.0') {
+    implementation("com.github.tsantalis:refactoring-miner:${refactoringMinerVersion}") {
         exclude group: "org.slf4j", module: "slf4j-log4j12"
     }
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.0"
+    // JGit is runtime-scoped in RefactoringMiner's POM, so it must be declared
+    // explicitly here to keep it on the compile classpath (runtime is provided
+    // transitively at runtime by RefactoringMiner itself).
+    compileOnly 'org.eclipse.jgit:org.eclipse.jgit:6.10.1.202505221210-r'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.3.20"
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:6.0.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.0.3'
+}
+
+test {
+    useJUnitPlatform()
 }

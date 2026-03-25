@@ -1,7 +1,6 @@
 package org.jetbrains.research.refactorinsight.processors;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
@@ -37,7 +36,7 @@ public class SingleCommitRefactoringTask extends CancellableRefactoringMiningTas
         this.project = project;
         this.commit = commit;
         this.window = window;
-        this.service = ServiceManager.getService(project, MiningService.class);
+        this.service = project.getService(MiningService.class);
         this.myRepository = service.getRepository();
     }
 

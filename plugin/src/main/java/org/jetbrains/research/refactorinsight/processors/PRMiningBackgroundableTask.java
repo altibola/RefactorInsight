@@ -1,7 +1,6 @@
 package org.jetbrains.research.refactorinsight.processors;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
@@ -33,7 +32,7 @@ public class PRMiningBackgroundableTask extends CancellableRefactoringMiningTask
             @Nullable Project project, List<VcsFullCommitDetails> commitDetails, PRFileEditor prFileEditor) {
         super(project, RefactorInsightBundle.message("mining"));
         this.project = project;
-        this.service = ServiceManager.getService(project, MiningService.class);
+        this.service = project.getService(MiningService.class);
         this.myRepository = service.getRepository();
         this.prFileEditor = prFileEditor;
         this.commitDetails = commitDetails;

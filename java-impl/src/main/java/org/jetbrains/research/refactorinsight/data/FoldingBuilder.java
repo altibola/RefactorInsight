@@ -2,6 +2,7 @@ package org.jetbrains.research.refactorinsight.data;
 
 import gr.uom.java.xmi.UMLClass;
 import gr.uom.java.xmi.UMLOperation;
+import gr.uom.java.xmi.VariableDeclarationContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.research.refactorinsight.adapters.CodeRange;
 import org.jetbrains.research.refactorinsight.data.util.JavaUtils;
@@ -12,7 +13,7 @@ public class FoldingBuilder {
      * Creates {@link FoldingDescriptor} instance for Java method.
      */
     @NotNull
-    public static FoldingDescriptor fromMethod(@NotNull UMLOperation method) {
+    public static FoldingDescriptor fromMethod(@NotNull VariableDeclarationContainer method) {
         int hintOffset = method.getLocationInfo().getStartOffset();
         int foldingStartOffset = method.getBody().getCompositeStatement().getLocationInfo().getStartOffset();
         int foldingEndOffset = method.getBody().getCompositeStatement().getLocationInfo().getEndOffset();

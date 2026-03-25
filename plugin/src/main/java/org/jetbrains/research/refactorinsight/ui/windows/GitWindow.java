@@ -8,8 +8,8 @@ import com.intellij.ui.components.JBList;
 import com.intellij.ui.components.JBViewport;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.UIUtil;
-import com.intellij.vcs.log.CommitId;
 import com.intellij.vcs.log.VcsCommitMetadata;
+import com.intellij.vcs.log.VcsFullCommitDetails;
 import com.intellij.vcs.log.ui.MainVcsLogUi;
 import com.intellij.vcs.log.ui.table.VcsLogGraphTable;
 
@@ -91,7 +91,7 @@ public class GitWindow {
    */
   public void refresh(String commitId) {
     int index = table.getSelectionModel().getAnchorSelectionIndex();
-    if (state && index >= 0 && table.getModel().getCommitId(index).getHash().asString().equals(commitId)) {
+    if (state && index >= 0 && table.getModel().getCommitMetadata(index).getId().asString().equals(commitId)) {
       buildComponent();
     }
   }
@@ -102,9 +102,9 @@ public class GitWindow {
   private void mineIfAbsent() {
     int index = table.getSelectionModel().getAnchorSelectionIndex();
     if (index >= 0) {
-      CommitId commitId = table.getModel().getCommitId(index);
-      if (commitId == null) return;
-      String commitHash = commitId.getHash().asString();
+      VcsCommitMetadata commitMeta = table.getModel().getCommitMetadata(index);
+      if (commitMeta == null) return;
+      String commitHash = commitMeta.getId().asString();
       if (miner.get(commitHash) == null) {
         VcsCommitMetadata metadata = table.getModel().getCommitMetadata(index);
         miner.mineAtCommit(metadata, project, this);
@@ -120,7 +120,7 @@ public class GitWindow {
       return;
     }
 
-    String commitId = table.getModel().getCommitId(index).getHash().asString();
+    String commitId = table.getModel().getCommitMetadata(index).getId().asString();
     RefactoringEntry entry = miner.get(commitId);
 
     if (entry == null) {
@@ -152,8 +152,13 @@ public class GitWindow {
           if (node.isLeaf()) {
             RefactoringInfo info = ((Node) node.getUserObject()).getInfo();
 
-            DiffWindow.showDiff(table.getModel().getFullDetails(index)
-                                    .getChanges(0), info, project, entry.getRefactorings());
+            Integer nodeId = table.getModel().getId(index);
+            VcsFullCommitDetails details = nodeId != null
+                ? table.getModel().getLogData().getCommitDetailsGetter().getCachedData(nodeId)
+                : null;
+            if (details != null) {
+              DiffWindow.showDiff(details.getChanges(0), info, project, entry.getRefactorings());
+            }
           }
         }
       }

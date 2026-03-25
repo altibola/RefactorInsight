@@ -1,6 +1,5 @@
 package org.jetbrains.research.refactorinsight.data.util;
 
-import gr.uom.java.xmi.UMLOperation;
 import gr.uom.java.xmi.UMLType;
 import gr.uom.java.xmi.VariableDeclarationContainer;
 import gr.uom.java.xmi.decomposition.AbstractCodeFragment;
@@ -43,13 +42,12 @@ public class JavaUtils {
         }
     }
 
-    public static String calculateSignatureForJavaMethod(UMLOperation operation) {
+    public static String calculateSignatureForJavaMethod(VariableDeclarationContainer operation) {
         StringBuilder builder = new StringBuilder();
         List<String> parameterTypeList = new ArrayList<>();
         for (UMLType type : operation.getParameterTypeList()) {
             parameterTypeList.add(type.toString());
         }
-
         builder.append(operation.getClassName())
                 .append(".")
                 .append(calculateSignatureWithoutClassName(operation.getName(), parameterTypeList));
@@ -57,16 +55,7 @@ public class JavaUtils {
     }
 
     public static String calculateSignatureForVariableDeclarationContainer(VariableDeclarationContainer operation) {
-        StringBuilder builder = new StringBuilder();
-        List<String> parameterTypeList = new ArrayList<>();
-        for (UMLType type : operation.getParameterTypeList()) {
-            parameterTypeList.add(type.toString());
-        }
-
-        builder.append(operation.getClassName())
-                .append(".")
-                .append(calculateSignatureWithoutClassName(operation.getName(), parameterTypeList));
-        return builder.toString();
+        return calculateSignatureForJavaMethod(operation);
     }
 
     public static String joinCodeFragments(Set<AbstractCodeFragment> codeFragments) {

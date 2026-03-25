@@ -1,7 +1,6 @@
 package org.jetbrains.research.refactorinsight.services;
 
 import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
@@ -25,7 +24,7 @@ public class SettingsState implements PersistentStateComponent<SettingsState> {
   public int threads = 8;
 
   public static SettingsState getInstance(Project project) {
-    return ServiceManager.getService(project, SettingsState.class);
+    return project.getService(SettingsState.class);
   }
 
   @Nullable

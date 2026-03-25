@@ -5,10 +5,16 @@ plugins {
 group = rootProject.group
 version = rootProject.version
 
+def refactoringMinerVersion = project.findProperty('refactoringMinerVersion') ?: '3.1.2'
+
 dependencies {
     implementation project(':common')
-    compileOnly 'org.jetbrains:annotations:22.0.0'
-    implementation(group: 'com.github.tsantalis', name: 'refactoring-miner', version: '2.4.0') {
+    compileOnly 'org.jetbrains:annotations:26.1.0'
+    // Use the fat jar (all classifier) so all of RefactoringMiner's bundled transitive
+    // types are available at compile time. All RM deps are declared 'runtime' in its POM,
+    // so the regular jar alone leaves them off the compile classpath.
+    implementation("com.github.tsantalis:refactoring-miner:${refactoringMinerVersion}:all") {
+        transitive = false
         exclude group: "org.slf4j", module: "slf4j-log4j12"
     }
 }

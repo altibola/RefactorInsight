@@ -22,7 +22,7 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.plugins.github.pullrequest.comment.GHPRDiffReviewSupport;
+import org.jetbrains.plugins.github.pullrequest.ui.diff.GHPRDiffReviewViewModel;
 import org.jetbrains.research.refactorinsight.actions.HideNonFunctionalChangesAction;
 import org.jetbrains.research.refactorinsight.folding.handlers.*;
 import org.jetbrains.research.refactorinsight.processors.RefactoringType;
@@ -183,7 +183,7 @@ public class RefactoringFolder {
 
   @Nullable
   private static String getRevisionAfter(@NotNull SimpleDiffRequest request) {
-    if (request.getUserData(GHPRDiffReviewSupport.Companion.getKEY()) != null) {
+    if (request.getUserData(GHPRDiffReviewViewModel.Companion.getKEY()) != null) {
       // Pull requests is not supported
       return null;
     }

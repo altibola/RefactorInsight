@@ -1,7 +1,7 @@
 package org.jetbrains.research.refactorinsight.services;
 
 import com.intellij.diff.fragments.LineFragmentImpl;
-import org.jetbrains.research.kotlinrminer.common.RefactoringType;
+import org.refactoringminer.api.RefactoringType;
 import org.jetbrains.research.refactorinsight.data.Group;
 import org.jetbrains.research.refactorinsight.data.RefactoringEntry;
 import org.jetbrains.research.refactorinsight.data.RefactoringInfo;
