@@ -41,7 +41,12 @@ public class ComboBoxRefactoringAction extends ComboBoxAction implements DumbAwa
     @Override
     public void update(@NotNull AnActionEvent e) {
         Presentation presentation = e.getPresentation();
+        boolean enabled = e.getProject() != null && e.getData(VcsLogInternalDataKeys.MAIN_UI) != null;
+        presentation.setEnabledAndVisible(enabled);
         presentation.setText(getText(getValue()));
+        if (enabled) {
+            WindowService.getInstance(e.getProject()).update(e);
+        }
     }
 
     @Override
@@ -109,12 +114,6 @@ public class ComboBoxRefactoringAction extends ComboBoxAction implements DumbAwa
         @Override
         public void update(@NotNull AnActionEvent e) {
             Toggleable.setSelected(e.getPresentation(), getValue() == myOption);
-            e.getPresentation().setEnabledAndVisible(isEnabled(e));
-            WindowService.getInstance(e.getProject()).update(e);
-        }
-
-        private boolean isEnabled(@NotNull AnActionEvent e) {
-            return e.getProject() != null && e.getData(VcsLogInternalDataKeys.MAIN_UI) != null;
         }
 
         @Override

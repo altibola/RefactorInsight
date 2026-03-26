@@ -15,6 +15,10 @@ import com.intellij.vcs.log.ui.table.VcsLogGraphTable;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.swing.SwingConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -90,9 +94,14 @@ public class GitWindow {
    * @param commitId to refresh the view at.
    */
   public void refresh(String commitId) {
-    int index = table.getSelectionModel().getAnchorSelectionIndex();
-    if (state && index >= 0 && table.getModel().getCommitMetadata(index).getId().asString().equals(commitId)) {
-      buildComponent();
+    if (!state) return;
+    int[] selectedRows = table.getSelectedRows();
+    for (int row : selectedRows) {
+      VcsCommitMetadata meta = table.getModel().getCommitMetadata(row);
+      if (meta != null && meta.getId().asString().equals(commitId)) {
+        buildComponent();
+        return;
+      }
     }
   }
 
@@ -100,36 +109,43 @@ public class GitWindow {
    * Mine commit if not already. Need because entry must be ready when classical diff is called.
    */
   private void mineIfAbsent() {
-    int index = table.getSelectionModel().getAnchorSelectionIndex();
-    if (index >= 0) {
-      VcsCommitMetadata commitMeta = table.getModel().getCommitMetadata(index);
-      if (commitMeta == null) return;
+    int[] selectedRows = table.getSelectedRows();
+    for (int row : selectedRows) {
+      VcsCommitMetadata commitMeta = table.getModel().getCommitMetadata(row);
+      if (commitMeta == null) continue;
       String commitHash = commitMeta.getId().asString();
       if (miner.get(commitHash) == null) {
-        VcsCommitMetadata metadata = table.getModel().getCommitMetadata(index);
-        miner.mineAtCommit(metadata, project, this);
+        miner.mineAtCommit(commitMeta, project, this);
+        return;
       }
     }
   }
 
   private void buildComponent() {
-    int index = table.getSelectionModel().getAnchorSelectionIndex();
+    int[] selectedRows = table.getSelectedRows();
 
-    if (index < 0) {
+    if (selectedRows.length == 0) {
       viewport.setView(new JBList<String>());
       return;
     }
 
-    String commitId = table.getModel().getCommitMetadata(index).getId().asString();
-    RefactoringEntry entry = miner.get(commitId);
+    List<RefactoringInfo> allRefactorings = new ArrayList<>();
 
-    if (entry == null) {
-      VcsCommitMetadata metadata = table.getModel().getCommitMetadata(index);
-      miner.mineAtCommit(metadata, project, this);
-      return;
+    for (int row : selectedRows) {
+      VcsCommitMetadata meta = table.getModel().getCommitMetadata(row);
+      if (meta == null) continue;
+      String commitId = meta.getId().asString();
+      RefactoringEntry entry = miner.get(commitId);
+      if (entry == null) {
+        miner.mineAtCommit(meta, project, this);
+        return;
+      }
+      if (!entry.timeout) {
+        allRefactorings.addAll(entry.getRefactorings());
+      }
     }
 
-    if (entry.timeout || entry.getRefactorings().isEmpty()) {
+    if (allRefactorings.isEmpty()) {
       final JBLabel component =
           new JBLabel(RefactorInsightBundle.message("no.ref"), SwingConstants.CENTER);
       component.setForeground(Gray._105);
@@ -137,7 +153,16 @@ public class GitWindow {
       return;
     }
 
-    Tree tree = TreeUtils.buildTree(entry.getRefactorings());
+    // Build a map from commitId to row index for efficient double-click lookup.
+    Map<String, Integer> commitToRow = new HashMap<>();
+    for (int row : selectedRows) {
+      VcsCommitMetadata meta = table.getModel().getCommitMetadata(row);
+      if (meta != null) {
+        commitToRow.put(meta.getId().asString(), row);
+      }
+    }
+
+    Tree tree = TreeUtils.buildTree(allRefactorings);
     tree.setCellRenderer(new MainCellRenderer());
 
     tree.addMouseListener(new MouseAdapter() {
@@ -151,13 +176,17 @@ public class GitWindow {
           DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
           if (node.isLeaf()) {
             RefactoringInfo info = ((Node) node.getUserObject()).getInfo();
-
-            Integer nodeId = table.getModel().getId(index);
+            String infoCommitId = info.getCommitId();
+            Integer row = commitToRow.get(infoCommitId);
+            if (row == null) return;
+            Integer nodeId = table.getModel().getId(row);
             VcsFullCommitDetails details = nodeId != null
                 ? table.getModel().getLogData().getCommitDetailsGetter().getCachedData(nodeId)
                 : null;
-            if (details != null) {
-              DiffWindow.showDiff(details.getChanges(0), info, project, entry.getRefactorings());
+            if (details != null && !details.getParents().isEmpty()) {
+              RefactoringEntry infoEntry = miner.get(infoCommitId);
+              DiffWindow.showDiff(details.getChanges(0), info, project,
+                  infoEntry != null ? infoEntry.getRefactorings() : allRefactorings);
             }
           }
         }
