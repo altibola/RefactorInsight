@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.jetbrains.research.kotlinrminer.common.RefactoringType.*;
+import static org.refactoringminer.api.RefactoringType.*;
 import static org.jetbrains.research.refactorinsight.utils.TextUtils.getMovedDirection;
 
 public class MoveOperationFoldingHandler implements FoldingHandler {

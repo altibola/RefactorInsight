@@ -4,7 +4,6 @@ import com.intellij.diff.fragments.MergeLineFragment;
 import com.intellij.diff.fragments.MergeLineFragmentImpl;
 import com.intellij.diff.tools.simple.SimpleThreesideDiffChange;
 import com.intellij.diff.tools.simple.SimpleThreesideDiffViewer;
-import com.intellij.diff.tools.util.text.MergeInnerDifferences;
 import com.intellij.diff.util.MergeConflictType;
 import com.intellij.diff.util.ThreeSide;
 import com.intellij.openapi.util.TextRange;
@@ -94,8 +93,7 @@ public class ThreeSidedRange {
     }
 
     public SimpleThreesideDiffChange getDiffChange(SimpleThreesideDiffViewer viewer) {
-        return new SimpleThreesideDiffChange(fragment, getMergeConflictType(type),
-                new MergeInnerDifferences(left, mid, right), viewer);
+        return new SimpleThreesideDiffChange(fragment, getMergeConflictType(type));
     }
 
     @Override

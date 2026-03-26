@@ -29,7 +29,7 @@ public class RefactoringColumn implements VcsLogCustomColumn<Boolean> {
     if (miningService == null) {
       return Boolean.FALSE;
     }
-    String commitHash = graphTableModel.getCommitId(row).getHash().asString();
+    String commitHash = graphTableModel.getCommitMetadata(row).getId().asString();
     return miningService.containsRefactoring(commitHash);
   }
 

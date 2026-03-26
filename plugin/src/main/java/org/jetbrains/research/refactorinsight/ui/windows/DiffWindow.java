@@ -496,14 +496,7 @@ public class DiffWindow extends DiffExtension {
         @Override
         protected void onAfterRediff() {
             super.onAfterRediff();
-            // TODO: check if it actually works
-            List<SimpleThreesideDiffChange> oldMarkings = viewer.getChanges();
-            oldMarkings.forEach(ThreesideDiffChangeBase::destroy);
-//            oldMarkings.clear();
-//            oldMarkings.addAll(ranges.stream()
-//                    .map(r -> r.getDiffChange(viewer))
-//                    .toList()
-//            );
+            // Changes cleared automatically by viewer on re-diff (destroy() removed in 2026.1)
             hideToolbarActions(viewer.getComponent());
         }
     }

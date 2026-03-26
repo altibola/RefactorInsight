@@ -1,48 +1,53 @@
 plugins {
     id 'java'
     id 'kotlin'
-    id 'org.jetbrains.intellij'
+    id 'org.jetbrains.intellij.platform'
 }
 
 group = rootProject.group
 version = rootProject.version
 
-repositories {
-    mavenCentral()
-    maven { url 'https://jitpack.io' }
-    maven { url 'https://cache-redirector.jetbrains.com/intellij-dependencies' }
-}
+def refactoringMinerVersion = project.findProperty('refactoringMinerVersion') ?: '3.1.2'
 
 dependencies {
     implementation(project(":common"))
     implementation(project(":java-impl"))
-    implementation(project(":kotlin-impl"))
-    implementation("org.jetbrains.research.kotlinrminer:kotlinRMiner-ide:2.1.1")
-    implementation(group: 'com.github.tsantalis', name: 'refactoring-miner', version: '2.4.0') {
+    implementation("com.github.tsantalis:refactoring-miner:${refactoringMinerVersion}") {
         exclude group: "org.slf4j", module: "slf4j-log4j12"
     }
-    implementation("org.slf4j:slf4j-jdk14:1.7.30")
-    implementation("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
+    implementation("org.slf4j:slf4j-jdk14:2.0.17")
     testImplementation('junit:junit:4.13.2')
-    testImplementation group: 'org.mockito', name: 'mockito-core', version: '4.10.0'
+    testImplementation 'org.mockito:mockito-core:5.23.0'
+
+    // JGit is runtime-scoped in RefactoringMiner's POM — needed on compile classpath
+    // for any plugin source that references org.eclipse.jgit.lib.Repository directly.
+    compileOnly 'org.eclipse.jgit:org.eclipse.jgit:6.10.1.202505221210-r'
+
+    intellijPlatform {
+        intellijIdea("2026.1")
+        bundledPlugin("com.intellij.java")
+        bundledPlugin("Git4Idea")
+        bundledPlugin("org.jetbrains.plugins.github")
+        bundledPlugin("org.jetbrains.kotlin")
+        pluginVerifier()
+        zipSigner()
+    }
 }
 
-runIde {
+tasks.named('runIde').configure {
     maxHeapSize = "4g"
 }
 
-tasks {
-    buildSearchableOptions {
-        enabled = false
+intellijPlatform {
+    pluginConfiguration {
+        version = providers.provider { project.version.toString() }
+        ideaVersion {
+            sinceBuild = "261"
+        }
     }
-
-    patchPluginXml {
-        version.set("${project.version}")
-        sinceBuild.set("221")
-        untilBuild.set("233.*")
-    }
-
-    runPluginVerifier {
-        ideVersions = Arrays.asList("2023.3.1")
+    pluginVerification {
+        ides {
+            recommended()
+        }
     }
 }

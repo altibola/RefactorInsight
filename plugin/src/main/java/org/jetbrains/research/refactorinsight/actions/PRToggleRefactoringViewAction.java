@@ -7,18 +7,29 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.DumbAwareToggleAction;
 import com.intellij.openapi.project.Project;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.plugins.github.api.data.GHCommit;
 import org.jetbrains.plugins.github.pullrequest.action.GHPRActionKeys;
+import org.jetbrains.plugins.github.pullrequest.data.GHPRDataContext;
+import org.jetbrains.plugins.github.pullrequest.data.GHPRDataProviderRepository;
+import org.jetbrains.plugins.github.pullrequest.data.GHPRIdentifier;
 import org.jetbrains.plugins.github.pullrequest.data.provider.GHPRChangesDataProvider;
+import org.jetbrains.plugins.github.pullrequest.data.provider.GHPRDataProvider;
+import org.jetbrains.plugins.github.pullrequest.ui.GHPRConnectedProjectViewModel;
 import org.jetbrains.research.refactorinsight.RefactorInsightBundle;
 import org.jetbrains.research.refactorinsight.services.WindowService;
 import org.jetbrains.research.refactorinsight.pullrequests.PRVirtualFile;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * An action that toggles the detection of refactorings in opened Pull Request.
@@ -28,17 +39,60 @@ public class PRToggleRefactoringViewAction extends DumbAwareToggleAction {
   @Override
   public void setSelected(@NotNull AnActionEvent e, boolean state) {
     Project project = e.getRequiredData(PlatformDataKeys.PROJECT);
-    @NotNull GHPRChangesDataProvider ghprChangesDataProvider =
-        e.getRequiredData(GHPRActionKeys.getPULL_REQUEST_DATA_PROVIDER()).getChangesData();
-    @NotNull CompletableFuture<List<GHCommit>> loadedCommits = ghprChangesDataProvider.loadCommitsFromApi();
+
+    GHPRConnectedProjectViewModel connectedVm =
+        e.getData(GHPRActionKeys.getPULL_REQUESTS_CONNECTED_PROJECT_VM());
+    GHPRIdentifier prId = e.getData(GHPRActionKeys.getPULL_REQUEST_ID());
+    if (connectedVm == null || prId == null) return;
+
+    GHPRDataProvider dataProvider;
+    try {
+      GHPRDataContext dataContext = connectedVm.getDataContext();
+      // The data-provider repository is internal to the GitHub plugin module (hence the
+      // $intellij_vcs_github suffix), so we access it via reflection. This is fragile and
+      // should be replaced once the GitHub plugin exposes a public API for retrieving PR
+      // commit lists (track as technical debt).
+      Method repoMethod = dataContext.getClass()
+          .getMethod("getDataProviderRepository$intellij_vcs_github");
+      GHPRDataProviderRepository repo = (GHPRDataProviderRepository) repoMethod.invoke(dataContext);
+      dataProvider = repo.findDataProvider(prId);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+      return;
+    }
+    if (dataProvider == null) return;
+
+    GHPRChangesDataProvider changesDataProvider = dataProvider.getChangesData();
+    CompletableFuture<List<GHCommit>> future = new CompletableFuture<>();
+    changesDataProvider.loadCommits(new Continuation<>() {
+      @NotNull
+      @Override
+      public CoroutineContext getContext() {
+        return EmptyCoroutineContext.INSTANCE;
+      }
+
+      @Override
+      public void resumeWith(@NotNull Object result) {
+        if (result instanceof kotlin.Result.Failure) {
+          future.completeExceptionally(((kotlin.Result.Failure) result).exception);
+        } else {
+          @SuppressWarnings("unchecked")
+          List<GHCommit> commits = (List<GHCommit>) result;
+          future.complete(commits);
+        }
+      }
+    });
+
     List<String> commitIds = new ArrayList<>();
     try {
-      List<GHCommit> ghCommits = loadedCommits.get();
+      List<GHCommit> ghCommits = future.get(30, TimeUnit.SECONDS);
       for (GHCommit ghCommit : ghCommits) {
         commitIds.add(ghCommit.getOid());
       }
-    } catch (InterruptedException | ExecutionException interruptedException) {
-      interruptedException.printStackTrace();
+    } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+      // Timeout after 30 s; large PRs or slow connections may need more time.
+      ex.printStackTrace();
+      return;
     }
 
     PRVirtualFile prVirtualFile = new PRVirtualFile(RefactorInsightBundle.message("discovered.refactorings.in.pr"),
@@ -61,6 +115,7 @@ public class PRToggleRefactoringViewAction extends DumbAwareToggleAction {
   }
 
   private boolean isEnabled(@NotNull AnActionEvent e) {
-    return e.getProject() != null;
+    return e.getProject() != null
+        && e.getData(GHPRActionKeys.getPULL_REQUEST_ID()) != null;
   }
 }

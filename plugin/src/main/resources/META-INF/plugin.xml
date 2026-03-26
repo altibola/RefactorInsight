@@ -16,6 +16,16 @@
       ]]></description>
 
     <change-notes><![CDATA[
+        <h4>2026.1-1.0</h4>
+        <ul>
+            <li>Remove upper IDE version restriction; compatible with all IDE builds from 2022.1 onwards.</li>
+            <li>Replace deprecated ServiceManager API with project.getService() for IDEA 2024.1+ compatibility.</li>
+            <li>Remove kotlinRMiner dependency; RefactoringMiner 3.x detects Java and Kotlin refactorings natively.</li>
+            <li>Update default RefactoringMiner version to 3.1.2.</li>
+            <li>Allow RefactoringMiner version to be overridden via the <code>refactoringMinerVersion</code> Gradle property.</li>
+            <li>Upgrade IntelliJ Platform Gradle Plugin to 2.13.1.</li>
+        </ul>
+
         <h4>2023.3-1.0</h4>
         <ul>
             <li>Add compatibility with IDEA 2023.3</li>

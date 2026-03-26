@@ -1,6 +1,5 @@
 package org.jetbrains.research.refactorinsight
 
-import com.intellij.openapi.vfs.VirtualFile
 import org.refactoringminer.api.Refactoring
 import org.refactoringminer.api.RefactoringHandler
 import org.refactoringminer.rm1.GitHistoryRefactoringMinerImpl
@@ -8,13 +7,13 @@ import org.refactoringminer.util.GitServiceImpl
 
 object JavaRefactoringFinder {
     fun findRefactoringsAtCommit(
-        repoRoot: VirtualFile,
+        repoPath: String,
         commitHash: String,
         processRefactorings: (List<Refactoring>) -> Unit,
     ) {
-        GitServiceImpl().openRepository(repoRoot.path).use { repo ->
+        GitServiceImpl().openRepository(repoPath).use { repo ->
             GitHistoryRefactoringMinerImpl().detectAtCommit(repo, commitHash,
-                object : RefactoringHandler() {
+                object : RefactoringHandler {
                     override fun handle(
                         commitId: String,
                         refactorings: List<Refactoring>
@@ -26,16 +25,16 @@ object JavaRefactoringFinder {
     }
 
     fun findRefactoringsBetweenCommits(
-        repoRoot: VirtualFile,
+        repoPath: String,
         startCommitHash: String,
         endCommit: String,
         processRefactorings: (MutableList<Refactoring>) -> Unit,
     ) {
-        GitServiceImpl().openRepository(repoRoot.path).use { repo ->
+        GitServiceImpl().openRepository(repoPath).use { repo ->
             GitHistoryRefactoringMinerImpl().detectBetweenCommits(repo,
                 startCommitHash,
                 endCommit,
-                object : RefactoringHandler() {
+                object : RefactoringHandler {
                     override fun handle(
                         commitId: String,
                         refactorings: MutableList<Refactoring>

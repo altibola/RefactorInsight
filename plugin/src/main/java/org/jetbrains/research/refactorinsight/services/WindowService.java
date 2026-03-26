@@ -2,7 +2,6 @@ package org.jetbrains.research.refactorinsight.services;
 
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.components.Service;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.vcs.log.ui.MainVcsLogUi;
@@ -27,7 +26,7 @@ public final class WindowService {
   }
 
   public static WindowService getInstance(@NotNull Project project) {
-    return ServiceManager.getService(project, WindowService.class);
+    return project.getService(WindowService.class);
   }
 
   /**

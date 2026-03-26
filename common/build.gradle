@@ -1,11 +1,13 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij'
+    id 'org.jetbrains.intellij.platform.module'
 }
 
 group = rootProject.group
 version = rootProject.version
 
-repositories {
-    mavenCentral()
+dependencies {
+    intellijPlatform {
+        intellijIdea("2026.1")
+    }
 }

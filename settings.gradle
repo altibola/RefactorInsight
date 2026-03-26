@@ -1,9 +1,26 @@
 pluginManagement {
     repositories {
-        maven {
-            url 'https://www.jetbrains.com/intellij-repository/snapshots/'
-        }
+        mavenCentral()
         gradlePluginPortal()
+    }
+    plugins {
+        id 'org.jetbrains.intellij.platform.settings' version '2.13.1'
+        id 'org.jetbrains.intellij.platform'          version '2.13.1'
+        id 'org.jetbrains.intellij.platform.module'   version '2.13.1'
+        id 'org.jetbrains.kotlin.jvm'                 version '2.3.20'
+    }
+}
+
+plugins {
+    id 'org.jetbrains.intellij.platform.settings'
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenCentral()
+        intellijPlatform {
+            defaultRepositories()
+        }
     }
 }
 
@@ -12,6 +29,5 @@ rootProject.name = "RefactorInsight"
 include('runner',
         'common',
         'java-impl',
-        'kotlin-impl',
         'plugin'
 )

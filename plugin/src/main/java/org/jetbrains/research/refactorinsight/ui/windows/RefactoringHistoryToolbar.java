@@ -19,7 +19,6 @@ import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.UIUtil;
 import com.intellij.vcs.log.impl.VcsLogManager;
-import com.intellij.vcs.log.impl.VcsLogTabLocation;
 import com.intellij.vcs.log.impl.VcsProjectLog;
 import com.intellij.vcs.log.ui.MainVcsLogUi;
 import com.intellij.vcs.log.ui.VcsLogPanel;
@@ -154,8 +153,7 @@ public class RefactoringHistoryToolbar {
         }
 
         String logId = "method history " + UUID.randomUUID();
-        MainVcsLogUi openLogTab = logManager.createLogUi(logManager.getMainLogUiFactory(logId, null),
-                VcsLogTabLocation.STANDALONE);
+        MainVcsLogUi openLogTab = logManager.createLogUi(logId, null);
 
         JComponent mainComponent = openLogTab.getMainComponent();
         mainComponent.setAutoscrolls(true);

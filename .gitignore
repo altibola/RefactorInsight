@@ -1,7 +1,25 @@
-/.idea/
+# ── Gradle ─────────────────────────────────────────────────────────────────
 /.gradle/
-/build/
-/plugin/build/
-/common/build
-/java-impl/build/
-/kotlin-impl/build/
+**/build/
+gradle-app.setting
+
+# ── IntelliJ IDEA ──────────────────────────────────────────────────────────
+/.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ── IntelliJ Platform Gradle Plugin (2.x) sandbox / cache ─────────────────
+/.intellijPlatform/
+
+# ── Java / Kotlin compiled output ─────────────────────────────────────────
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# ── OS / editors ───────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*~

@@ -58,7 +58,7 @@ public final class MiningService implements PersistentStateComponent<MiningServi
     }
 
     public static MiningService getInstance(@NotNull Project project) {
-        return ServiceManager.getService(project, MiningService.class);
+        return project.getService(MiningService.class);
     }
 
     public boolean isMining() {
