@@ -98,6 +98,13 @@ public class CommitMiner implements Consumer<TimedVcsCommit> {
                                             String commitParentHash, long commitTimestamp,
                                             Repository repository, Project project) {
         try {
+            try {
+                String ideaHome = com.intellij.openapi.application.PathManager.getHomePath();
+                if (System.getProperty("idea.home.path") == null) {
+                    System.setProperty("idea.home.path", ideaHome);
+                }
+            } catch (Throwable ignored) {
+            }
             GitHistoryRefactoringMiner miner = new GitHistoryRefactoringMinerImpl();
             miner.detectAtCommit(repository, commitHash, new RefactoringHandler() {
                 @Override
