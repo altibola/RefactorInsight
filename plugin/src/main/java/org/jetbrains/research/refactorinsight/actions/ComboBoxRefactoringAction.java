@@ -145,7 +145,7 @@ public class ComboBoxRefactoringAction extends ComboBoxAction implements DumbAwa
         @Override
         public void actionPerformed(@NotNull AnActionEvent e) {
             setValue(myOption);
-            Project project = e.getRequiredData(PlatformDataKeys.PROJECT);
+            Project project = e.getRequiredData(CommonDataKeys.PROJECT);
             MainVcsLogUi vcsLogUi = e.getRequiredData(VcsLogInternalDataKeys.MAIN_UI);
             boolean state = currentListItem == ListItem.REFACTORING;
             WindowService.getInstance(project).setSelected(vcsLogUi, state);
