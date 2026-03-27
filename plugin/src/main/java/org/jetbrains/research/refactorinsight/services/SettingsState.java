@@ -22,6 +22,7 @@ public class SettingsState implements PersistentStateComponent<SettingsState> {
   public int commitLimit = 100;
   public int historyLimit = 100;
   public int threads = 8;
+  public int miningTimeoutSeconds = 60;
 
   public static SettingsState getInstance(Project project) {
     return project.getService(SettingsState.class);

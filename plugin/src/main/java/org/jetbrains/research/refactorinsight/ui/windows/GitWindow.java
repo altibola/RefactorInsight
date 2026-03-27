@@ -62,9 +62,10 @@ public class GitWindow {
       if (listSelectionEvent.getValueIsAdjusting()) {
         return;
       }
-      mineIfAbsent();
       if (state) {
         buildComponent();
+      } else {
+        mineIfAbsent();
       }
     });
   }
@@ -130,6 +131,7 @@ public class GitWindow {
     }
 
     List<RefactoringInfo> allRefactorings = new ArrayList<>();
+    VcsCommitMetadata firstUnmined = null;
 
     for (int row : selectedRows) {
       VcsCommitMetadata meta = table.getModel().getCommitMetadata(row);
@@ -137,12 +139,19 @@ public class GitWindow {
       String commitId = meta.getId().asString();
       RefactoringEntry entry = miner.get(commitId);
       if (entry == null) {
-        miner.mineAtCommit(meta, project, this);
-        return;
-      }
-      if (!entry.timeout) {
+        // Track the first unmined commit; start mining it after collecting partial results.
+        if (firstUnmined == null) {
+          firstUnmined = meta;
+        }
+      } else if (!entry.timeout) {
         allRefactorings.addAll(entry.getRefactorings());
       }
+    }
+
+    // Kick off mining for the first unmined commit (if any). The refresh callback will
+    // re-invoke buildComponent() once that commit has been processed.
+    if (firstUnmined != null) {
+      miner.mineAtCommit(firstUnmined, project, this);
     }
 
     if (allRefactorings.isEmpty()) {

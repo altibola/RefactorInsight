@@ -41,10 +41,10 @@ public class ComboBoxRefactoringAction extends ComboBoxAction implements DumbAwa
     @Override
     public void update(@NotNull AnActionEvent e) {
         Presentation presentation = e.getPresentation();
-        boolean enabled = e.getProject() != null && e.getData(VcsLogInternalDataKeys.MAIN_UI) != null;
-        presentation.setEnabledAndVisible(enabled);
         presentation.setText(getText(getValue()));
-        if (enabled) {
+        // Always keep the combobox visible in the toolbar; WindowService.update registers the
+        // GitWindow lazily when the VCS Log UI is available in the DataContext.
+        if (e.getProject() != null) {
             WindowService.getInstance(e.getProject()).update(e);
         }
     }
