@@ -11,6 +11,7 @@ import com.intellij.vcs.log.ui.MainVcsLogUi;
 import com.intellij.vcs.log.ui.VcsLogInternalDataKeys;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.research.refactorinsight.RefactorInsightBundle;
 import org.jetbrains.research.refactorinsight.services.WindowService;
 
@@ -51,7 +52,12 @@ public class ComboBoxRefactoringAction extends ComboBoxAction implements DumbAwa
 
     @Override
     public @NotNull JComponent createCustomComponent(@NotNull Presentation presentation, @NotNull String place) {
-        JPanel panel = new JPanel(new GridBagLayout());
+        // Use a DataProvider panel so that CONTEXT_COMPONENT resolves to *this* (which is always
+        // visible in the toolbar), instead of traversing up to the ChangesTree's inner list which
+        // may be hidden when the refactoring tree is shown in the viewport.  Without this, IntelliJ's
+        // ActionManagerImpl would log "Action is not performed because target component is not showing"
+        // and silently drop the "Files" / "Refactorings" switch.
+        ComboBoxPanel panel = new ComboBoxPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(0, 6, 0, 6));
         ComboBoxButton button = createComboBoxButton(presentation);
         button.setOpaque(false);
@@ -68,6 +74,26 @@ public class ComboBoxRefactoringAction extends ComboBoxAction implements DumbAwa
         constraints.gridx = 1;
         panel.add(button, constraints);
         return panel;
+    }
+
+    /**
+     * A JPanel that implements {@link DataProvider} to provide itself as
+     * {@link PlatformCoreDataKeys#CONTEXT_COMPONENT}. This ensures that IntelliJ's
+     * "target component is not showing" guard in {@code ActionManagerImpl} always finds a
+     * visible (toolbar-resident) component rather than the hidden changes-browser tree list.
+     */
+    private static final class ComboBoxPanel extends JPanel implements DataProvider {
+        ComboBoxPanel(LayoutManager layout) {
+            super(layout);
+        }
+
+        @Override
+        public @Nullable Object getData(@NotNull String dataId) {
+            if (PlatformCoreDataKeys.CONTEXT_COMPONENT.is(dataId)) {
+                return this;
+            }
+            return null;
+        }
     }
 
     @NotNull

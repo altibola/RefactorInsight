@@ -148,8 +148,10 @@ public class GitWindow {
       }
     }
 
-    // Kick off mining for the first unmined commit (if any). The refresh callback will
-    // re-invoke buildComponent() once that commit has been processed.
+    // Kick off mining for the first unmined commit (if any). MiningService.mineAtCommit()
+    // accepts only one task at a time (it cancels any previous one), so we mine one commit
+    // per invocation. The refresh() callback will re-invoke buildComponent() once that commit
+    // is processed, which will then pick up the next unmined commit in the selection.
     if (firstUnmined != null) {
       miner.mineAtCommit(firstUnmined, project, this);
     }

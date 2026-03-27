@@ -85,7 +85,7 @@ public abstract class CancellableRefactoringMiningTask extends Task.Backgroundab
             } catch (InterruptedException e) {
                 throw new ProcessCanceledException(e);
             } catch (TimeoutException ignored) {
-                // normal polling interval — keep waiting until repeatUntil
+                // normal polling interval - keep waiting until repeatUntil
             }
         } while (System.nanoTime() < repeatUntil);
 

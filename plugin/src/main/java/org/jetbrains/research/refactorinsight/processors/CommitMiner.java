@@ -126,6 +126,10 @@ public class CommitMiner implements Consumer<TimedVcsCommit> {
         if (refactorings.isEmpty()) {
             entry.setRefactorings(Collections.emptyList());
         } else {
+            // Use collect(Collectors.toList()) instead of toList() to produce a mutable list.
+            // map.merge() below calls current.getRefactorings().addAll(...) when a merge commit
+            // triggers handle() more than once; the unmodifiable list returned by toList() would
+            // throw UnsupportedOperationException there.
             List<RefactoringInfo> infos = refactorings.stream()
                     .map(refactoring -> INFO_FACTORY.create(refactoring, project.getBasePath()))
                     .filter(Objects::nonNull)
