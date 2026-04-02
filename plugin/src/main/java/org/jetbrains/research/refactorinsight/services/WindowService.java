@@ -37,7 +37,9 @@ public final class WindowService {
    */
   public void setSelected(@NotNull MainVcsLogUi ui, boolean state) {
     GitWindow gitWindow = gitInfo.get(ui.getTable());
-    gitWindow.setSelected(state);
+    if (gitWindow != null) {
+      gitWindow.setSelected(state);
+    }
   }
 
   public boolean isSelected(@NotNull MainVcsLogUi vcsLogUi) {

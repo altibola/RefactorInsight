@@ -42,12 +42,18 @@ public class ComboBoxRefactoringAction extends ComboBoxAction implements DumbAwa
     @Override
     public void update(@NotNull AnActionEvent e) {
         Presentation presentation = e.getPresentation();
-        presentation.setText(getText(getValue()));
         // Always keep the combobox visible in the toolbar; WindowService.update registers the
         // GitWindow lazily when the VCS Log UI is available in the DataContext.
         if (e.getProject() != null) {
-            WindowService.getInstance(e.getProject()).update(e);
+            WindowService windowService = WindowService.getInstance(e.getProject());
+            windowService.update(e);
+            // Sync the displayed selection from WindowService (single source of truth).
+            MainVcsLogUi vcsLogUi = e.getData(VcsLogInternalDataKeys.MAIN_UI);
+            if (vcsLogUi != null) {
+                currentListItem = windowService.isSelected(vcsLogUi) ? ListItem.REFACTORING : ListItem.FILES;
+            }
         }
+        presentation.setText(getText(getValue()));
     }
 
     @Override
@@ -113,11 +119,6 @@ public class ComboBoxRefactoringAction extends ComboBoxAction implements DumbAwa
         return currentListItem;
     }
 
-    private void setValue(@NotNull ListItem option) {
-        if (currentListItem == option) return;
-        currentListItem = option;
-    }
-
     @Nls
     @NotNull
     private String getText(@NotNull ListItem option) {
@@ -144,11 +145,11 @@ public class ComboBoxRefactoringAction extends ComboBoxAction implements DumbAwa
 
         @Override
         public void actionPerformed(@NotNull AnActionEvent e) {
-            setValue(myOption);
-            Project project = e.getRequiredData(CommonDataKeys.PROJECT);
-            MainVcsLogUi vcsLogUi = e.getRequiredData(VcsLogInternalDataKeys.MAIN_UI);
-            boolean state = currentListItem == ListItem.REFACTORING;
-            WindowService.getInstance(project).setSelected(vcsLogUi, state);
+            Project project = e.getData(CommonDataKeys.PROJECT);
+            MainVcsLogUi vcsLogUi = e.getData(VcsLogInternalDataKeys.MAIN_UI);
+            if (project == null || vcsLogUi == null) return;
+            boolean newState = myOption == ListItem.REFACTORING;
+            WindowService.getInstance(project).setSelected(vcsLogUi, newState);
         }
     }
 }
