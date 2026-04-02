@@ -29,6 +29,8 @@ public class SettingsComponent {
       new JBIntSpinner(100, 0, Integer.MAX_VALUE, 10);
   private final JBIntSpinner threads =
       new JBIntSpinner(8, 0, Integer.MAX_VALUE, 1);
+  private final JBIntSpinner miningTimeout =
+      new JBIntSpinner(60, 1, Integer.MAX_VALUE, 10);
 
   /**
    * SettingsComponent constructor. Creates the setting panel.
@@ -83,6 +85,7 @@ public class SettingsComponent {
         .addLabeledComponent(RefactorInsightBundle.message("label.max.history"), historyLimit, 1,
             false)
         .addLabeledComponent(RefactorInsightBundle.message("label.threads"), threads, 1, false)
+        .addLabeledComponent(RefactorInsightBundle.message("label.mining.timeout"), miningTimeout, 1, false)
         .addComponent(clear)
         .addComponent(all)
         .addComponent(choose)
@@ -121,5 +124,13 @@ public class SettingsComponent {
 
   public void setThreads(int n) {
     this.threads.setNumber(n);
+  }
+
+  public int getMiningTimeout() {
+    return miningTimeout.getNumber();
+  }
+
+  public void setMiningTimeout(int seconds) {
+    this.miningTimeout.setNumber(seconds);
   }
 }

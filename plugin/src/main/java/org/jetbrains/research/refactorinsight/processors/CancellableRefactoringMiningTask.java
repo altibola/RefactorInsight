@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.research.refactorinsight.data.RefactoringEntry;
 import org.jetbrains.research.refactorinsight.services.MiningService;
+import org.jetbrains.research.refactorinsight.services.SettingsState;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -62,13 +63,14 @@ public abstract class CancellableRefactoringMiningTask extends Task.Backgroundab
     }
 
     /**
-     * Waits for {@code future} to be complete or reach the maximum allowed mining time of 60 sec,
-     * or the current thread's indicator to be canceled.
+     * Waits for {@code future} to be complete, or until the configurable mining timeout elapses,
+     * or the current thread's indicator is canceled.
      */
     private <T> void runWithCheckCanceled(@NotNull Future<T> future,
                                           @NotNull final ProgressIndicator indicator,
                                           TimedVcsCommit commit, Project project) throws ExecutionException {
-        long repeatUntil = System.nanoTime() + TimeUnit.MINUTES.toNanos(1);
+        int timeoutSeconds = SettingsState.getInstance(project).miningTimeoutSeconds;
+        long repeatUntil = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds);
 
         do {
             if (canceled) {
@@ -83,13 +85,13 @@ public abstract class CancellableRefactoringMiningTask extends Task.Backgroundab
             } catch (InterruptedException e) {
                 throw new ProcessCanceledException(e);
             } catch (TimeoutException ignored) {
-                logger.info("The timeout has been exceeded while checking task cancellation");
+                // normal polling interval - keep waiting until repeatUntil
             }
         } while (System.nanoTime() < repeatUntil);
 
+        String parentHash = commit.getParents().isEmpty() ? null : commit.getParents().get(0).asString();
         RefactoringEntry refactoringEntry =
-                RefactoringEntry.createEmptyEntry(commit.getId().asString(), commit.getParents().get(0).asString(),
-                        commit.getTimestamp());
+                RefactoringEntry.createEmptyEntry(commit.getId().asString(), parentHash, commit.getTimestamp());
         refactoringEntry.setTimeout(true);
         MiningService.getInstance(project).getState().refactoringsMap.map.putIfAbsent(commit.getId().asString(), refactoringEntry);
     }

@@ -11,6 +11,7 @@ import org.jetbrains.research.refactorinsight.RefactorInsightBundle;
 import org.jetbrains.research.refactorinsight.data.RefactoringEntry;
 import org.jetbrains.research.refactorinsight.data.RefactoringInfo;
 import org.jetbrains.research.refactorinsight.services.MiningService;
+import org.jetbrains.research.refactorinsight.services.SettingsState;
 import org.jetbrains.research.refactorinsight.utils.TextUtils;
 import org.refactoringminer.api.GitHistoryRefactoringMiner;
 import org.refactoringminer.api.Refactoring;
@@ -20,6 +21,7 @@ import org.refactoringminer.rm1.GitHistoryRefactoringMinerImpl;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * The CommitMiner is a Consumer of GitCommit.
@@ -124,11 +126,15 @@ public class CommitMiner implements Consumer<TimedVcsCommit> {
         if (refactorings.isEmpty()) {
             entry.setRefactorings(Collections.emptyList());
         } else {
+            // Use collect(Collectors.toList()) instead of toList() to produce a mutable list.
+            // map.merge() below calls current.getRefactorings().addAll(...) when a merge commit
+            // triggers handle() more than once; the unmodifiable list returned by toList() would
+            // throw UnsupportedOperationException there.
             List<RefactoringInfo> infos = refactorings.stream()
                     .map(refactoring -> INFO_FACTORY.create(refactoring, project.getBasePath()))
                     .filter(Objects::nonNull)
                     .map(info -> info.setEntry(entry))
-                    .toList();
+                    .collect(Collectors.toList());
             entry.setRefactorings(infos).combineRelated();
             entry.getRefactorings().forEach(info -> TextUtils.check(info, project));
         }
@@ -176,9 +182,10 @@ public class CommitMiner implements Consumer<TimedVcsCommit> {
                                     String commitParentHash, long commitTimestamp) {
         ExecutorService service = Executors.newSingleThreadExecutor();
         Future<?> f = null;
+        int timeoutSeconds = SettingsState.getInstance(myProject).miningTimeoutSeconds;
         try {
             f = service.submit(runnable);
-            f.get(120, TimeUnit.SECONDS);
+            f.get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
             if (f.cancel(true)) {
                 RefactoringEntry refactoringEntry =

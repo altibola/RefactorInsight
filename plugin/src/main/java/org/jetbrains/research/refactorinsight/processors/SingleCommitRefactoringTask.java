@@ -9,6 +9,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.research.refactorinsight.RefactorInsightBundle;
+import org.jetbrains.research.refactorinsight.data.RefactoringEntry;
 import org.jetbrains.research.refactorinsight.services.MiningService;
 import org.jetbrains.research.refactorinsight.ui.windows.GitWindow;
 
@@ -52,6 +53,15 @@ public class SingleCommitRefactoringTask extends CancellableRefactoringMiningTas
 
     @Override
     public void run(@NotNull ProgressIndicator progressIndicator) {
+        if (commit.getParents().isEmpty()) {
+            // Root commit has no parent to diff against; record an empty entry so that
+            // subsequent calls do not attempt mining again.
+            logger.info(String.format("Skipping root commit %s (no parents)", commit.getId().asString()));
+            RefactoringEntry emptyEntry = RefactoringEntry.createEmptyEntry(
+                    commit.getId().asString(), null, commit.getTimestamp());
+            service.getState().refactoringsMap.map.putIfAbsent(commit.getId().asString(), emptyEntry);
+            return;
+        }
         try {
             runWithCheckCanceled(
                     CommitMiner.mineAtCommit(commit.getId().asString(), commit.getParents().get(0).asString(),

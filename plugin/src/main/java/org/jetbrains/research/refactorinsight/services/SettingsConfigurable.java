@@ -44,7 +44,8 @@ public class SettingsConfigurable implements Configurable {
     SettingsState settings = SettingsState.getInstance(project);
     return !(mySettingsComponent.getCommitLimit() == settings.commitLimit
         && mySettingsComponent.getHistoryLimit() == settings.historyLimit
-        && mySettingsComponent.getThreads() == settings.threads);
+        && mySettingsComponent.getThreads() == settings.threads
+        && mySettingsComponent.getMiningTimeout() == settings.miningTimeoutSeconds);
   }
 
   @Override
@@ -53,6 +54,7 @@ public class SettingsConfigurable implements Configurable {
     settings.commitLimit = mySettingsComponent.getCommitLimit();
     settings.historyLimit = mySettingsComponent.getHistoryLimit();
     settings.threads = mySettingsComponent.getThreads();
+    settings.miningTimeoutSeconds = mySettingsComponent.getMiningTimeout();
     List<GitRepository> repositories = GitRepositoryManager
         .getInstance(project).getRepositories();
     if (repositories.isEmpty()) {
@@ -67,6 +69,7 @@ public class SettingsConfigurable implements Configurable {
     mySettingsComponent.setCommitLimit(settings.commitLimit);
     mySettingsComponent.setHistoryLimit(settings.historyLimit);
     mySettingsComponent.setThreads(settings.threads);
+    mySettingsComponent.setMiningTimeout(settings.miningTimeoutSeconds);
   }
 
   @Override
